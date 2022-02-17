@@ -1,0 +1,1166 @@
+************************************************************************
+**** Введение
+
+*
+Три состояния
+Теперь слушайте внимательно. Это самая важная вещь, которую нужно запомнить о Git,
+если вы хотите, чтобы остаток процесса обучения прошёл гладко. У Git есть три основных
+состояния, в которых могут находиться ваши файлы: зафиксированное (committed),
+изменённое (modified) и подготовленное (staged).
+• Зафиксированный значит, что файл уже сохранён в вашей локальной базе.
+• К изменённым относятся файлы, которые поменялись, но ещё не были зафиксированы.
+• Подготовленные файлы — это изменённые файлы, отмеченные для включения в
+следующий коммит.
+
+
+
+*** Первоначальная настройка Git
+
+$ git config
+
+1. Файл /etc/gitconfig содержит значения, общие для всех пользователей системы и для
+всех их репозиториев. Если при запуске git config указать параметр --system, то
+параметры будут читаться и сохраняться именно в этот файл.
+
+2. Файл ~/.gitconfig или ~/.config/git/config хранит настройки конкретного пользователя.
+Этот файл используется при указании параметра --global.
+
+3. Файл config в каталоге Git (т.е. .git/config) репозитория, который вы используете в
+данный момент, хранит настройки конкретного репозитория.
+
+* Note
+Настройки на каждом следующем уровне подменяют настройки из предыдущих уровней,
+то есть значения в .git/config перекрывают соответствующие значения в /etc/gitconfig.
+
+
+**
+Чтобы посмотреть все установленные настройки и узнать где именно они заданы,
+используйте команду:
+$ git config --list --show-origin
+
+
+** Имя пользователя
+$ git config --global user.name "John Doe"
+$ git config --global user.email johndoe@example.com
+
+
+** Выбор редактора
+$ git config --global core.editor vim
+
+* windows
+$ git config --global core.editor "'C:/Program Files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin"
+
+
+** Проверка настроек
+$ git config --list
+user.name=John Doe
+user.email=johndoe@example.com
+color.status=auto
+color.branch=auto
+color.interactive=auto
+color.diff=auto
+
+
+**
+Также вы можете проверить значение конкретного ключа, выполнив git config <key>:
+$ git config user.name
+John Doe
+
+
+** NOTE
+Так как Git читает значение настроек из нескольких файлов, возможна
+ситуация когда Git использует не то значение что вы ожидали. В таком
+случае вы можете спросить Git об origin этого значения. Git выведет имя
+файла, из которого значение для настройки было взято последним:
+
+$ git config --show-origin rerere.autoUpdate
+file:/home/johndoe/.gitconfig
+false
+
+
+** Как получить помощь?
+
+$ git help <команда>
+$ git <команда> --help
+$ man git-<команда>
+
+* 
+вы можете использовать опцию -h для вывода краткой инструкции по использованию:
+$ git add -h
+usage: git add [<options>] [--] <pathspec>...
+
+  -n, --dry-run		dry run
+  -v, --verbose 	be verbose
+...
+
+
+
+
+************************************************************************
+**** Основы Git
+
+
+*** Создание Git-репозитория
+
+$ cd /home/user/my_project
+$ git init
+
+$ git add *.c
+$ git add LICENSE
+$ git commit -m 'initial project version'
+
+
+** Клонирование существующего репозитория
+
+git clone <url>
+
+$ git clone https://github.com/libgit2/libgit2
+
+# Эта команда делает всё то же самое, что и предыдущая, только результирующий каталог будет назван mylibgit.
+$ git clone https://github.com/libgit2/libgit2 mylibgit 
+
+
+
+*** Запись изменений в репозиторий
+
+** Определение состояния файлов
+$ git status
+
+** Отслеживание новых файлов
+$ git add README
+
+$ git status
+On branch master
+...
+    new file: README
+   
+ 
+** Индексация изменённых файлов
+
+$ git status
+...
+new file: README
+...
+modified: CONTRIBUTING.md
+
+
+$ git add CONTRIBUTING.md
+$ git status
+...
+new file: README
+modified: CONTRIBUTING.md
+
+
+** Сокращенный вывод статуса
+
+$ git status -s
+  M README
+  MM Rakefile
+  A lib/git.rb
+  M lib/simplegit.rb
+  ?? LICENSE.txt
+
+
+*** Игнорирование файлов
+
+$ cat .gitignore
+*.[oa]
+*~
+
+
+** Вот ещё один пример файла .gitignore:
+
+# Исключить все файлы с расширение .a
+*.a
+
+# Но отслеживать файл lib.a даже если он подпадает под исключение выше
+!lib.a
+
+# Исключить файл TODO в корневой директории, но не файл в subdir/TODO
+/TODO
+
+# Игнорировать все файлы в директории build/
+build/
+
+# Игнорировать файл doc/notes.txt, но не файл doc/server/arch.txt
+doc/*.txt
+
+# Игнорировать все .txt файлы в директории doc/
+doc/**/*.txt
+
+
+** TIP полный список примеров .gitignore файлов для множества проектов и языков https://github.com/github/gitignore
+
+
+*** Просмотр индексированных и неиндексированных изменений
+
+$ git status
+On branch master
+..
+Changes not staged for commit:
+(use "git add <file>..." to update what will be committed)
+(use "git checkout -- <file>..." to discard changes in working directory)
+modified: CONTRIBUTING.md
+
+$ git diff
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+
+
+** команда сравнивает ваши проиндексированные изменения с последним коммитом
+$ git diff --staged
+
+
+** TIP git diff --cached для просмотра проиндексированных изменений (--staged и --cached синонимы)
+
+
+*** Коммит изменений
+$ git commit
+
+** TIP  
+git config --global core.editor
+
+
+** Игнорирование индексации
+Добавление параметра -a в команду git commit заставляет Git автоматически индексировать 
+каждый уже отслеживаемый на момент коммита файл, позволяя вам обойтись без git add
+
+$ git commit -a -m 'added new benchmarks'
+
+
+*** Удаление файлов
+$ git rm
+
+если вы выполните команду git rm, удаление файла попадёт в индекс:
+$ git rm PROJECTS.md
+rm 'PROJECTS.md'
+
+$ git status
+On branch master
+...
+deleted: PROJECTS.md
+
+
+** удалить файл из индекса, оставив его при этом в рабочем каталоге
+$ git rm --cached README
+
+
+* В команду git rm можно передавать файлы, каталоги или шаблоны.
+
+* команда удаляет все файлы имеющие расширение .log находящиеся в директории log/.
+$ git rm log/\*.log
+
+** TIP
+Обратите внимание на обратный слэш (\) перед *. Он необходим из-за того, что Git
+использует свой собственный обработчик имён файлов вдобавок к обработчику вашего
+командного интерпретатора.
+
+* команда удаляет все файлы, имена которых заканчиваются на ~.
+$ git rm \*~
+
+
+
+*** Перемещение файлов
+
+$ git mv file_from file_to
+
+
+$ git mv README.md README
+$ git status
+On branch master
+...
+renamed: README.md -> README
+
+* это эквивалентно выполнению следующих команд:
+$ mv README.md README
+$ git rm README.md
+$ git add README
+
+
+
+*** Просмотр истории коммитов
+
+$ git log
+
+
+$ git log
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:
+Mon Mar 17 21:52:11 2008 -0700
+changed the version number
+
+commit 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:
+Sat Mar 15 16:40:33 2008 -0700
+removed unnecessary test
+
+commit a11bef06a3f659402fe7563abf99ad00de2209e6
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:
+Sat Mar 15 10:31:28 2008 -0700
+first commit
+
+** git log --patch
+-p или --patch, который показывает разницу (выводит патч), внесенную в каждый коммит.
+
+параметр -2 для вывода только двух записей:
+
+** git log --stat
+если вы хотите увидеть сокращенную статистику для каждого
+коммита, вы можете использовать опцию --stat:
+
+$ git log --stat
+commit ca82a6dff817ec66f44342007202690a93763949
+...
+Rakefile | 2 +-
+1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7
+...
+lib/simplegit.rb | 5 -----
+1 file changed, 5 deletions(-)
+
+
+** git log --pretty
+
+**
+Опция --pretty=oneline выводит каждый коммит в одну строку
+
+$ git log --pretty=oneline
+ca82a6dff817ec66f44342007202690a93763949 changed the version number
+085bb3bcb608e1e8451d4b2432f8ecbe6306e7e7 removed unnecessary test
+a11bef06a3f659402fe7563abf99ad00de2209e6 first commit
+
+**
+опции --pretty=short, --pretty=full и --pretty=fuller делают вывод приблизительно в том же формате, 
+но с меньшим или большим количеством информации соответственно
+
+** --pretty=format
+$ git log --pretty=format:"%h -%an, %ar : %s"
+ca82a6d - Scott Chacon, 6 years ago : changed the version number
+085bb3b - Scott Chacon, 6 years ago : removed unnecessary test
+a11bef0 - Scott Chacon, 6 years ago : first commit
+
+**
+Table 1. Полезные опции для git log --pretty=format
+Опция Описания вывода
+%H Хеш коммита
+%h Сокращенный хеш коммита
+%T Хеш дерева
+%t Сокращенный хеш дерева
+%P Хеш родителей
+%p Сокращенный хеш родителей
+%an Имя автора
+%ae Электронная почта автора
+%ad Дата автора (формат даты можно задать опцией --date=option)
+%ar Относительная дата автора
+%cn Имя коммитера
+%ce Электронная почта коммитера
+%cd Дата коммитера
+%cr Относительная дата коммитера
+%s Содержание
+
+
+** TIP
+Автор – это человек, изначально сделавший работу
+коммитер – это человек, который последним применил эту работу.
+
+
+** Опции --pretty=oneline и --pretty=format являются особенно полезными с опцией --graph команды log.
+
+** --graph
+$ git log --pretty=format:"%h %s" --graph
+* 2d3acf9 ignore errors from SIGCHLD on trap
+* 5e3ee11 Merge branch 'master' of git://github.com/dustin/grit
+|\
+| * 420eac9 Added a method for getting the current branch.
+* | 30e367c timeout code and tests
+* | 5a09431 add timeout protection to grit
+* | e1193f8 support for heads with slashes in them
+|/
+* d6016bc require time for xmlschema
+* 11d191e Merge branch 'defunkt' into local
+
+**
+Table 2. Наиболее распространенные опции для команды git log
+Опция 		Описание
+-p 				Показывает патч для каждого коммита.
+--stat			Показывает статистику измененных файлов для каждого коммита.
+--shortstat 	Отображает только строку с количеством изменений/вставок/удалений
+для команды --stat.
+--name-only		Показывает список измененных файлов после информации о коммите.
+--name-status	Показывает список файлов, которые добавлены/изменены/удалены.
+--abbrev-commit Показывает только несколько символов SHA-1 чек-суммы вместо всех 40.
+--relative-date 	Отображает дату в относительном формате (например, "2 weeks ago")
+вместо стандартного формата даты.
+--graph 		Отображает ASCII граф с ветвлениями и историей слияний.
+--pretty 		Показывает коммиты в альтернативном формате. Возможные варианты
+опций: oneline, short, full, fuller и format (с помощью последней можно
+указать свой формат).
+--oneline 		Сокращение для одновременного использования опций --pretty=oneline
+--abbrev-commit.
+
+
+** Ограничение вывода
+
+** git log -<n>
+n последних коммитов.
+
+
+** --since и --until
+$ git log --since=2.weeks
+
+** NOTE
+Допускается указывать несколько параметров --author и --grep для поиска,
+которые позволят найти коммиты, сооветствующие любому указанному
+--author и любому указанному --grep шаблону; однако, применение опции
+--all-match заставит искать коммиты соответствующие всем указанным
+--grep шаблонам.
+
+
+** опция -S
+показывает только те коммиты, в которых изменение в коде повлекло за собой добавление или удаление этой строки
+
+** хотите найти последний коммит, который добавил или удалил вызов определенной функции,
+вы можете запустить команду:
+$ git log -S function_name
+
+
+Table 3. Опции для ограничения вывода команды git log
+Опция 			Описание
+-(n) 				Показывает только последние n коммитов.
+--since, --after 	Показывает только те коммиты, которые были сделаны
+после указанной даты.
+--until, --before 	Показывает только те коммиты, которые были сделаны до
+указанной даты.
+--author 			Показывает только те коммиты, в которых запись author
+совпадает с указанной строкой.
+--committer 		Показывает только те коммиты, в которых запись committer
+совпадает с указанной строкой.
+--grep 				Показывает только коммиты, сообщение которых содержит
+указанную строку.
+-S 					Показывает только коммиты, в которых изменение в коде
+повлекло за собой добавление или удаление указанной
+строки.
+
+** Опция --
+Последней полезной опцией, которую принимает команда git log как фильтр, является
+путь. Если вы укажете директорию или имя файла, вы ограничите вывод только теми
+коммитами, в которых были изменения этих файлов. Эта опция всегда указывается
+последней после двойного тире (--), что отделяет указываемый путь от опций.
+
+
+$ git log --pretty="%h - %s" --author=gitster --since="2008-10-01" \
+--before="2008-11-01" --no-merges -- t/
+
+5610e3b - Fix testcase failure when extended attributes are in use
+acd3b9e - Enhance hold_lock_file_for_{update,append}() API
+f563754 - demonstrate breakage of detached checkout with symbolic link HEAD
+d1a43f2 - reset --hard/read-tree --reset -u: remove unmerged new paths
+51a94af - Fix "checkout --track -b newbranch" on detached HEAD
+b0ad11e - pull: allow "git pull origin $something:$current_branch" into an unborn
+branch
+
+** TIP
+Чтобы исключить их из вывода команды git log используйте опцию --no-merges.
+
+
+*** Операции отмены
+$ git commit --amend
+
+$ git commit -m 'initial commit'
+$ git add forgotten_file
+$ git commit --amend
+** В итоге получится единый коммит — второй коммит заменит результаты первого.
+
+
+*** Отмена индексации файла
+$ git reset
+
+$ git add .
+$ git status
+On branch master
+...
+renamed: README.md -> README
+modified: CONTRIBUTING.md
+
+
+$ git reset HEAD CONTRIBUTING.md
+  Unstaged changes after reset:
+  M CONTRIBUTING.md
+$ git status
+On branch master
+...
+Changes to be committed:
+  renamed: README.md -> README
+
+Changes not staged for commit:
+  modified: CONTRIBUTING.md
+
+
+*** Отмена изменений в файле
+"git checkout -- <file>..." to discard changes in working directory
+
+$ git checkout -- <file>
+
+** IMPORTANT 
+Важно понимать, что git checkout -- <file> — опасная команда. Все
+локальные изменения в файле пропадут — Git просто заменит его
+версией из последнего коммита. Ни в коем случае не используйте эту
+команду, если вы не уверены, что изменения в файле вам не нужны.
+
+
+
+*** Работа с удалёнными репозиториями
+
+** Просмотр удалённых репозиториев
+$ git remote
+
+**
+$ git clone https://github.com/schacon/ticgit
+$ cd ticgit
+$ git remote
+origin
+
+** NOTE
+origin — имя по умолчанию,
+которое Git даёт серверу, с котрого производилось клонирование
+
+
+$ git remote -v
+origin https://github.com/schacon/ticgit (fetch)
+origin https://github.com/schacon/ticgit (push)
+
+
+$ cd grit
+$ git remote -v
+bakkdoor 	https://github.com/bakkdoor/grit (fetch)
+bakkdoor 	https://github.com/bakkdoor/grit (push)
+cho45 		https://github.com/cho45/grit (fetch)
+cho45		https://github.com/cho45/grit (push)
+defunkt		https://github.com/defunkt/grit (fetch)
+defunkt		https://github.com/defunkt/grit (push)
+koke		git://github.com/koke/grit.git (fetch)
+koke		git://github.com/koke/grit.git (push)
+origin		git@github.com:mojombo/grit.git (fetch)
+origin		git@github.com:mojombo/grit.git (push)
+
+
+** Добавление удалённых репозиториев
+$ git remote add <shortname> <url>
+
+$ git remote
+origin
+$ git remote add pb https://github.com/paulboone/ticgit
+$ git remote -v
+origin https://github.com/schacon/ticgit (fetch)
+origin https://github.com/schacon/ticgit (push)
+pb https://github.com/paulboone/ticgit (fetch)
+pb https://github.com/paulboone/ticgit (push)
+
+
+$ git fetch pb
+remote: Counting objects: 43, done.
+remote: Compressing objects: 100% (36/36), done.
+remote: Total 43 (delta 10), reused 31 (delta 5)
+Unpacking objects: 100% (43/43), done.
+From https://github.com/paulboone/ticgit
+* [new branch] master-> pb/master
+* [new branch] ticgit-> pb/ticgit
+
+
+** Получение изменений из удалённого репозитория — Fetch и Pull
+$ git fetch [remote-name]
+
+** чтобы автоматически получить изменения из удалённой ветки и слить их со своей текущей.
+$ git pull 
+
+
+** Отправка изменений в удаленный репозиторий (Push)
+$ git push <remote-name> <branch-name>
+
+$ git push origin master
+
+
+** Просмотр удаленного репозитория
+$ git remote show <remote>
+
+
+$ git remote show origin
+* remote origin
+  Fetch URL: https://github.com/schacon/ticgit
+  Push URL: https://github.com/schacon/ticgit
+  HEAD branch: master
+  Remote branches:
+	master
+	tracked
+	dev-branch
+	tracked
+  Local branch configured for 'git pull':
+	master merges with remote master
+  Local ref configured for 'git push':
+	master pushes to master (up to date)
+
+
+** Удаление и переименование удалённых репозиториев
+$ git remote rename
+
+$ git remote rename pb paul
+$ git remote
+origin
+paul
+
+** Note
+также изменит имена удалённых веток в вашем репозитории. То,
+к чему вы обращались как pb/master, теперь стало paul/master.
+
+** Удаление
+$ git remote rm
+
+$ git remote rm paul
+$ git remote
+origin
+
+
+
+*** Работа с метками
+$ git tag (параметры -l и --list опциональны)
+
+$ git tag
+v0.1
+v1.3
+
+$ git tag -l 'v1.8.5*'
+v1.8.5
+v1.8.5-rc0
+v1.8.5-rc1
+v1.8.5-rc2
+v1.8.5-rc3
+v1.8.5.1
+v1.8.5.2
+
+** Note
+Для отображение тегов согласно шаблону требуются параметры -l или --list
+
+
+** Создание меток
+* Легковесный тег — это что-то очень похожее на ветку, которая не изменяется — просто указатель на определённый коммит.
+* аннотированные теги хранятся в базе данных Git как полноценные объекты.
+
+* Аннотированные метки
+$ git tag -a v1.4 -m 'my version 1.4'
+$ git tag
+v0.1
+v1.3
+v1.4
+
+$ git show v1.4
+tag v1.4
+Tagger: Ben Straub <ben@straub.cc>
+Date:   Sat May 3 20:19:12 2014 -0700
+
+my version 1.4
+
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+changed the version number
+
+
+* Легковесные метки
+Легковесная метка — это ещё один способ пометить коммит. По сути, это контрольная
+сумма коммита, сохранённая в файл — больше никакой информации не хранится. Для
+создания легковесной метки не передавайте опций -a, -s и -m, укажите только название:
+
+$ git tag v1.4-lw
+$ git tag
+v0.1
+v1.3
+v1.4
+v1.4-lw
+v1.5
+
+
+$ git show v1.4-lw
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon <schacon@gee-mail.com>
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+  changed the version number
+
+
+** Отложенная растановка меток
+Для отметки коммита укажите его контрольную сумму (или её часть) как параметр команды
+
+$ git tag -a v1.2 9fceb02
+
+
+** Обмен метками
+По умолчанию, команда git push не отправляет теги на удалённые сервера.
+
+$ git push origin <tagname>
+
+* --tags 
+Если у вас много тегов, и вам хотелось бы отправить все за один раз, то можно
+использовать опцию --tags для команды git push.
+
+$ git push origin --tags
+
+
+* Note
+git push <remote> --tags
+не различает аннотированные и легковесные теги; не существует простой опции, которая
+позволила бы вам указать тип тегов для отправки.
+
+
+** Удаление меток
+$ git tag -d <tagname>
+
+* при удалении тега не происходит его удаление с сервера.
+
+* удаление тега из удалённого репозитория
+Первый способ — это выполнить команду 
+$ git push <remote> :refs/tags/<tagname>:
+
+$ git push origin :refs/tags/v1.4-lw
+To /git@github.com:schacon/simplegit.git
+- [deleted]		v1.4-lw
+
+* Note
+Это следует понимать как обновление удаленного тэга пустым значением, что при водит к его удалению.
+
+*
+Второй способ удалить тег из удалённого репозитория более интуитивный:
+$ git push origin --delete <tagname>
+
+
+** Переход на метку
+$ git checkout <tagname>
+
+
+$ git checkout 2.0.0
+Note: checking out '2.0.0'.
+You are in 'detached HEAD' state.
+...
+
+* Note
+Если в состоянии “detached HEAD” внести изменения и сделать коммит, то тег не изменится,
+при этом новый коммит не будет относиться ни к какой из веток, а доступ к нему можно
+будет получить только по его хэшу. Поэтому, если вам нужно внести
+изменения — исправить ошибку в одной из старых версий — скорее всего вам следует
+создать ветку:
+
+$ git checkout -b version2 v2.0.0
+Switched to a new branch 'version2'
+
+
+
+*** Псевдонимы в Git
+
+$ git config --global alias.co checkout
+$ git config --global alias.br branch
+$ git config --global alias.ci commit
+$ git config --global alias.st status
+
+Это означает, что, например, вместо ввода git commit, вам достаточно набрать только git ci
+
+* псевдоним unstage:
+$ git config --global alias.unstage 'reset HEAD --'
+
+$ git unstage fileA
+$ git reset HEAD -- fileA
+
+* last:
+$ git config --global alias.last 'log -1 HEAD'
+
+* git visual для запуска gitk:
+$ git config --global alias.visual "!gitk"
+
+
+
+
+
+************************************************************************
+**** Ветвление в Git
+
+** Создание новой ветки
+$ git branch testing
+
+* Note
+git branch только создаёт новую ветку, но не переключает на неё.
+
+
+* куда указывают указатели веток
+$ git log --oneline --decorate
+
+
+** Переключение веток
+$ git checkout testing
+
+
+** Чтобы посмотреть историю по всем веткам
+$ git log --all
+
+$ git log --oneline --decorate --graph --all
+
+$ git log --oneline --decorate --graph --all
+* c2b9e (HEAD, master) made other changes
+| * 87ab2 (testing) made a change
+|/
+* f30ab add feature #32 - ability to add new formats to the
+* 34ac2 fixed bug #1328 - stack overflow under certain conditions
+* 98ca9 initial commit of my project
+
+
+** Одновременное создание новой ветки и переключение на неё
+$ git checkout -b <newbranchname>
+
+
+
+*** Основы ветвления и слияния
+
+** Основы ветвления
+
+
+$ git checkout -b iss53
+Switched to a new branch "iss53"
+
+* Это тоже самое что и:
+
+$ git branch iss53
+$ git checkout iss53
+
+
+* ветвление и слияние
+$ git checkout -b hotfix
+Switched to a new branch 'hotfix'
+
+$ vim index.html
+
+$ git commit -a -m 'fixed the broken email address'
+[hotfix 1fb7853] fixed the broken email address
+1 file changed, 2 insertions(+)
+
+$ git checkout master
+
+$ git merge hotfix
+Updating f42c576..3a0874c
+Fast-forward
+  index.html | 2 ++
+  1 file changed, 2 insertions(+)
+
+
+** Основы слияния
+
+$ git checkout master
+Switched to branch 'master'
+$ git merge iss53
+Merge made by the 'recursive' strategy.
+index.html |  1 +
+1 file changed, 1 insertion(+)
+
+* Теперь, когда изменения слиты, ветка iss53 больше не нужна. Вы можете закрыть задачу в
+системе отслеживания ошибок и удалить ветку:
+
+$ git branch -d iss53
+
+
+** Основные конфликты слияния
+
+$ git merge iss53
+Auto-merging index.html
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+
+$ git mergetool
+
+
+*** Управление ветками
+
+* Команда git branch делает несколько больше, чем просто создаёт и удаляет ветки. При
+запуске без параметров, вы получите простой список имеющихся у вас веток:
+
+$ git branch
+  iss53
+* master
+  testing
+  
+$ git branch -v
+  iss53
+  93b412c fix javascript issue
+* master 7a98805 Merge branch 'iss53'
+  testing 782fd34 add scott to the author list in the readmes
+
+
+** Опции --merged и --no-merged могут отфильтровать этот список для вывода только тех веток,
+которые слиты или ещё не слиты в текущую ветку.
+
+$ git branch --merged
+  iss53
+* master
+
+$ git branch --no-merged
+  testing
+  
+* Вы увидите оставшуюся ветку. Так как она содержит ещё не слитые наработки, попытка
+удалить её командой git branch -d приведёт к ошибке:
+
+$ git branch -d testing
+error: The branch 'testing' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D testing'.
+
+* TIP
+Вы всегда можете указать дополнительный аргумент для вывода той же
+информации, но относительно указанной ветки предварительно не извлекая и
+не переходя на неё.
+$ git checkout testing
+$ git branch --no-merged master
+  topicA
+  featureB
+
+
+** Долгоживущие ветки
+*master — возможно, только тот код, который был или будет выпущен.
+При этом существует и параллельная ветка с именем
+*develop или *next, предназначенная для работы и тестирования стабильности
+
+
+
+*** Удалённые ветки
+
+$ git ls-remote <remote>
+$ git remote show <remote>
+
+
+* Note
+“origin” — это не специальное название Подобно названию
+ветки “master”, “origin” не имеет какого-либо
+специального значения в Git. В то время как “master” — это название по
+умолчанию для ветки при выполнении git init только потому что часто
+используется, “origin” — это название по умолчанию для удалённого сервера
+когда вы запускаете git clone. Если вы выполните git clone -o booyah, то по
+умолчанию ветка слежения будет иметь вид booyah/master.
+
+git clone -o booyah  -->  booyah/master
+
+
+
+*** Отправка изменений
+
+$ git push <remote> <branch>
+
+
+$ git push origin serverfix
+Counting objects: 24, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (15/15), done.
+Writing objects: 100% (24/24), 1.91 KiB | 0 bytes/s, done.
+Total 24 (delta 2), reused 0 (delta 0)
+To https://github.com/schacon/simplegit
+ * [new branch] serverfix -> serverfix
+
+*
+refs/heads/serverfix:refs/heads/serverfix, что означает “возьми мою локальную ветку
+serverfix и обнови ей удалённую ветку serverfix”.
+
+*
+Вы также можете выполнить 
+$ git push origin serverfix:serverfix 
+
+— произойдёт то же самое — здесь говорится “возьми мою
+ветку serverfix и сделай её удалённой веткой serverfix”.
+
+
+*
+Если вы не хотите чтобы на удалённом сервере ветка называлась serverfix, то вместо предыдущей команды выполните 
+$ git push origin serverfix:awesomebranch
+, которая отправит локальную ветку serverfix в ветку awesomebranch удалённого репозитория.
+
+
+** Note
+** Не вводите каждый раз свой пароль
+
+Если вы используете HTTPS URL для отправки изменений, Git-сервер будет
+спрашивать имя пользователя и пароль для аутентификации. По умолчанию
+вам будет предложено ввести эти данные в терминале, чтобы сервер мог
+определить разрешена ли вам отправка изменений.
+Если вы не хотите вводить свои данные каждый раз при отправке
+изменений, вы можете настроить “credential cache”. Проще всего держать их
+в памяти несколько минут, это легко настроить с помощью команды 
+$ git config --global credential.helper cache.
+
+
+**
+В следующий раз, когда один из ваших соавторов будет получать обновления с сервера, он
+получит ссылку на то, на что указывает serverfix на сервере, как удалённую ветку
+origin/serverfix:
+
+$ git fetch origin
+remote: Counting objects: 7, done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 3 (delta 0)
+Unpacking objects: 100% (3/3), done.
+From https://github.com/schacon/simplegit
+  * [new branch] serverfix -> origin/serverfix
+
+Необходимо отметить, что при получении данных создаются ветки слежения, вы не
+получаете автоматически для них локальных редактируемых копий. Другими словами, в
+нашем случае вы не получите новую ветку serverfix — только указатель origin/serverfix,
+который вы не можете изменять.
+Чтобы слить эти наработки в свою текущую рабочую ветку, выполните 
+$ git merge origin/serverfix. 
+
+Если вам нужна локальная ветка serverfix, в которой вы сможете работать,
+то вы можете создать её на основе ветки слежения:
+
+$ git checkout -b serverfix origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+
+Это даст вам локальную ветку, в которой можно работать и которая будет начинаться там
+же, где и origin/serverfix.
+
+
+
+*** Отслеживание веток
+
+$ git checkout -b <branch> <remote>/<branch>. 
+
+Это часто используемая команда, поэтому Git предоставляет сокращённую форму записи в виде флага --track:
+
+$ git checkout --track origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+
+* 
+Если вы пытаетесь извлечь ветку, которая не существует, но
+существует только одна удалённая ветка с точно таким же именем, то Git автоматически
+создаст ветку слежения:
+
+$ git checkout serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+Switched to a new branch 'serverfix'
+
+
+$ git checkout -b sf origin/serverfix
+Branch sf set up to track remote branch serverfix from origin.
+Switched to a new branch 'sf
+
+
+** Замена ветки слежения  -u или --set-upstream-to
+Если у вас уже есть локальная ветка и вы хотите настроить ее на слежение за удалённой
+веткой, которую вы только что получили, или хотите изменить используемую upstream-
+ветку, то воспользуйтесь параметрами -u или --set-upstream-to для команды git branch,
+чтобы явно установить новое значение.
+
+$ git branch -u origin/serverfix
+Branch serverfix set up to track remote branch serverfix from origin.
+
+
+** Сокращение Upstream  @{upstream} или @{u}
+отслеживаемая ветка, можно ссылаться на нее при помощью сокращений @{upstream} или @{u}.
+вы можете использовать 
+$ git merge @{u}  эквивалентно  $ git merge origin/master.
+
+
+** git branch -vv
+Если вы хотите посмотреть как у вас настроены ветки слежения, воспользуйтесь опцией -vv
+для команды git branch.
+
+$ git branch -vv
+iss53	7e424c3		[origin/iss53: ahead 2] forgot the brackets
+master	1ae2a45		[origin/master] deploying index fix
+* serverfix f8674d9	[teamone/server-fix-good: ahead 3, behind 1] this should do it
+testing	5ea463a		trying something new
+
+наша ветка iss53 следит за origin/iss53 и “опережает” её на два
+изменения — это значит, что у нас есть два локальных коммита, которые не отправлены на сервер.
+
+наша ветка master отслеживает ветку origin/master и находится в актуальном состоянии.
+
+локальная ветка serverfix следит за
+веткой server-fix-good на сервере teamone, опережает её на три коммита и отстает на
+один — это значит, что на сервере есть один коммит, который мы ещё не слили, и три
+локальных коммита, которые ещё не отправлены на сервер.
+
+
+** Если вы хотите иметь актуальную информацию
+$ git fetch --all; git branch -vv
+
+
+** Получение изменений  $ git fetch и merge
+лучше явно использовать команды fetch и merge, поскольку магия git pull может
+часто сбивать с толку.
+
+
+** Удаление веток на удалённом сервере
+
+Для удаления ветки serverfix на сервере, выполните следующую команду:
+$ git push origin --delete serverfix
+To https://github.com/schacon/simplegit
+  - [deleted]  serverfix
+  
+Всё, что делает эта строка — удаляет указатель на сервере. Как правило, Git сервер хранит
+данные пока не запустится сборщик мусора, поэтому если ветка была удалена случайно,
+чаще всего её легко восстановить.
+
+
+
+*** Перебазирование
+
+*
+переключимся на ветку experiment и перебазируем её относительно
+ветки master следующим образом:
+
+$ git checkout experiment
+$ git rebase master
+First, rewinding head to replay your work on top of it...
+Applying: added staged command
+
+
+* Перемотка ветки master
+вы можете переключиться обратно на ветку master и выполнить слияние
+перемоткой.
+
+$ git checkout master
+$ git merge experiment
+
+
+*
+хотите внести изменения клиентской части в основную
+линию разработки для релиза, но при этом не хотите добавлять изменения серверной части
+до полного тестирования. Вы можете взять изменения из ветки client, которых нет в server
+(C8 и C9), и применить их на ветке master при помощи опции --onto команды git rebase:
+
+$ git rebase --onto master server client
+
+$ git checkout master
+$ git merge client
+
+
+*
+можете выполнить перебазирование ветки server относительно ветки master без предварительного
+переключения на неё при помощи команды git rebase <basebranch> <topicbranch>, которая
+извлечёт тематическую ветку (в данном случае server) и применит изменения в ней к
+базовой ветке (master):
+
+$ git rebase master server
+
+$ git checkout master
+$ git merge server
+
+$ git branch -d client
+$ git branch -d server
+
+
+** Опасности перемещения !!! **
+
+!!! Не перемещайте коммиты, уже отправленные в публичный репозиторий !!!
+
+
+
+
+************************************************************************
+**** Распределенный Git
